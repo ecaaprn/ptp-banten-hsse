@@ -2,7 +2,19 @@
 // config/database.php
 // SQLite PDO Automatic database initializer & connection
 
-$db_file = __DIR__ . '/../database.sqlite';
+// Detect Vercel / serverless environment
+$isVercel = isset($_ENV['VERCEL']) || getenv('VERCEL') || isset($_SERVER['VERCEL']);
+if ($isVercel || !is_writable(__DIR__ . '/..')) {
+    $db_file = sys_get_temp_dir() . '/database.sqlite';
+    if (!file_exists($db_file)) {
+        $source_db = __DIR__ . '/../database.sqlite';
+        if (file_exists($source_db)) {
+            @copy($source_db, $db_file);
+        }
+    }
+} else {
+    $db_file = __DIR__ . '/../database.sqlite';
+}
 
 try {
     $pdo = new PDO("sqlite:" . $db_file);
