@@ -1,11 +1,11 @@
 <?php
 // login.php
-session_start();
 require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/includes/auth.php';
 
 $error = '';
 
-if (isset($_SESSION['user_id'])) {
+if (isLoggedIn()) {
     header("Location: index.php");
     exit();
 }
@@ -25,6 +25,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['nama_lengkap'] = $user['nama_lengkap'];
             $_SESSION['role'] = $user['role'];
             
+            // Set signed cookie for serverless environments (Vercel)
+            $sign = hash_hmac('sha256', $user['id'] . '|' . $user['username'], PTP_AUTH_SECRET);
+            $authData = [
+                'id' => $user['id'],
+                'username' => $user['username'],
+                'nama_lengkap' => $user['nama_lengkap'],
+                'role' => $user['role'],
+                'sign' => $sign
+            ];
+            setcookie('ptp_auth_session', base64_encode(json_encode($authData)), time() + (86400 * 30), "/");
+
             header("Location: index.php");
             exit();
         } else {
@@ -60,32 +71,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <form action="login.php" method="POST">
       <div class="form-group" style="margin-bottom: 20px;">
         <label for="username">Username</label>
-        <input type="text" id="username" name="username" class="form-control" placeholder="Masukkan username" required autofocus value="admin">
+        <input type="text" id="username" name="username" class="form-control" placeholder="Masukkan username" required autofocus value="<?= isset($username) ? htmlspecialchars($username) : '' ?>">
       </div>
 
       <div class="form-group" style="margin-bottom: 24px;">
         <label for="password">Password</label>
-        <input type="password" id="password" name="password" class="form-control" placeholder="Masukkan password" required value="admin123">
+        <input type="password" id="password" name="password" class="form-control" placeholder="Masukkan password" required>
       </div>
 
       <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 14px;">
-        Masuk Ke System
+        Masuk
       </button>
     </form>
-
-    <div style="margin-top: 24px; text-align: center; border-top: 1px solid #E2E8F0; padding-top: 20px;">
-      <p style="font-size: 11px; color: #64748B; margin-bottom: 8px;">Pengujian Demo Cepat:</p>
-      <button type="button" class="demo-login-btn" onclick="fillDemoCredentials()">
-        Gunakan Akun Demo (admin / admin123)
-      </button>
-    </div>
   </div>
-
-  <script>
-    function fillDemoCredentials() {
-      document.getElementById('username').value = 'admin';
-      document.getElementById('password').value = 'admin123';
-    }
-  </script>
 </body>
 </html>

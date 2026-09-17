@@ -8,6 +8,9 @@
   "routes": [
     { "src": "/assets/(.*)", "dest": "/assets/$1" },
     { "src": "/uploads/(.*)", "dest": "/uploads/$1" },
+    { "src": "/login", "dest": "/login.php" },
+    { "src": "/logout", "dest": "/logout.php" },
+    { "src": "/$", "dest": "/index.php" },
     { "src": "/(.*)", "dest": "/$1" }
   ]
 }
